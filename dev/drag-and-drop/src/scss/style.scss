@@ -1,0 +1,381 @@
+@use 'sass:math';
+
+@function em($px, $current: 16) {
+    @return math.div($px, $current) + em;
+}
+
+@function rem($px) {
+    $result: math.div($px, 16) + rem;
+    @return $result;
+}
+
+%transition {
+    transition: all 0.6s ease 0s;
+}
+
+$bgcbody: #181818;
+$primary-light: #8abdff;
+$primary: #6d5dfc;
+$primary-dark: #5b0eeb;
+$clickByTouchColor0: rgba(0, 0, 0, 0);
+
+$zIndex0: 0;
+$zIndex1: 1;
+$zIndex2: 2;
+$zIndex3: 3;
+
+$zIndex4: 4;
+$zIndex5: 5;
+
+$minWidth: 300;
+$maxWidth: 1920;
+$maxWidthContainer: 1170;
+$containerPadding: 30;
+
+$containerWidth: $maxWidthContainer + $containerPadding;
+
+@mixin adaptiveValue(
+    $property,
+    $startSize,
+    $minSize,
+    $widthTo: $minWidth,
+    $widthFrom: $containerWidth,
+    $keepSize: 0
+) {
+    @if ($widthFrom >= $containerWidth or $widthFrom == 0) {
+        $widthFrom: $containerWidth;
+    }
+    @if ($widthTo <= $minWidth) {
+        $widthTo: $minWidth;
+    }
+    @if ($minSize <= 0) {
+        $minSize: 0.0001;
+    }
+    @if ($startSize <= 0) {
+        $startSize: 0.0001;
+    }
+    // Для calc();
+    $addSize: math.div($startSize - $minSize, 16);
+
+    // Брейк-поинты в EM
+    $widthFromMedia: em($widthFrom);
+    $widthToMedia: em($widthTo);
+
+    // Получение значения свойства
+    $propertyValue: calc(
+            #{rem($minSize)} + #{$addSize} * (100vw - #{rem($widthTo)}) / #{math.div(
+					$widthFrom,
+					16
+				) - math.div($widthTo, 16)}
+    );
+
+    @media (min-width: $widthToMedia) and (max-width: $widthFromMedia) {
+        #{$property}: $propertyValue;
+    }
+
+    @if $widthFrom ==
+			$containerWidth or
+			$widthFrom ==
+			$maxWidth or
+			$keepSize ==
+			1 or
+			$keepSize ==
+			2 {
+        @media (min-width: $widthFromMedia) {
+            #{$property}: rem($startSize);
+        }
+    }
+
+    @if $widthTo == $minWidth or $keepSize == 1 or $keepSize == 3 {
+        @media (max-width: $widthToMedia) {
+            #{$property}: rem($minSize);
+        }
+    }
+}
+
+
+/* =============================================  Image  --Start--  ============================================= */
+.image {
+
+    // .image__block
+    &__block {
+        position: relative;
+        margin: rem(4) rem(4);
+
+        width: rem(100.39);
+        @include adaptiveValue('width', 100.39, 94, 991.98);
+        @include adaptiveValue('width', 100, 84, 0, 991.98);
+        height: rem(100.39);
+        @include adaptiveValue('height', 100.39, 84, 991.98);
+        @include adaptiveValue('height', 100, 94, 0, 991.98);
+
+        background-color: rgba(151, 151, 151, 0.3);
+
+        border-radius: rem(6);
+        @include adaptiveValue('border-radius', 6, 4, 991.98);
+        @include adaptiveValue('border-radius', 6, 4, 0, 991.98);
+
+        overflow: hidden;
+
+        // .image__block._hovered
+        &._hovered {
+            background-color: $primary;
+            box-shadow: rem(0) rem(0) rem(12) rem(8) $primary;
+        }
+
+        // .image__block._show
+        &._show {
+            background-color: $primary;
+            box-shadow: rem(0) rem(0) rem(12) rem(8) $primary;
+        }
+
+        // .image__block._dropped
+        &._dropped {
+            border: rem(2) dashed red;
+        }
+
+        // .image__block._current
+        &._current {
+            border: rem(2) dashed red;
+        }
+
+        // .image__block._error
+        &._error {
+            box-shadow: rem(0) rem(0) rem(16) rem(8) #ff0000,
+            rem(0) rem(0) rem(18) rem(10) #ff0000;
+        }
+    }
+
+    // .image-block
+    &-block {
+        // .image-block__content
+        &__content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+
+            cursor: pointer;
+            @extend %transition;
+
+            &._hidden {
+                display: none;
+            }
+        }
+
+        // .image-block__input
+        &__input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+
+            font-size: 0;
+            user-select: none;
+
+            opacity: 0;
+            cursor: pointer;
+            -webkit-tap-highlight-color: $clickByTouchColor0;
+        }
+
+        // .image-block__preview
+        &__preview {
+            position: relative;
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+
+            border-radius: inherit;
+
+            pointer-events: none;
+            z-index: $zIndex0;
+        }
+
+        // .image-block__img
+        &__img {
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+            border-radius: inherit;
+        }
+
+        // .image-block__placeholder
+        &__placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+
+            pointer-events: none;
+
+            // .image-block__content._active .image-block__placeholder
+
+            .image-block__content._active & {
+                display: none;
+            }
+        }
+
+        // .image-block-placeholder
+        &-placeholder {
+            // .image-block-placeholder__icon
+            &__icon {
+                // .image-block-placeholder__icon svg
+                & svg {
+                    width: rem(26);
+                    @include adaptiveValue('width', 26, 24, 991.98);
+                    @include adaptiveValue('width', 26, 22, 0, 991.98);
+                    height: rem(26);
+                    @include adaptiveValue('height', 26, 24, 991.98);
+                    @include adaptiveValue('height', 26, 22, 0, 991.98);
+
+                    & * {
+                        fill: #ffffff;
+                    }
+                }
+            }
+
+            // .image-block-placeholder__title
+            &__title {
+                color: #ffffff;
+                font-size: rem(10);
+                @include adaptiveValue('font-size', 10, 8, 991.98);
+                @include adaptiveValue('font-size', 10, 7, 0, 991.98);
+                font-weight: 700;
+                letter-spacing: rem(0.4);
+                line-height: 1;
+            }
+        }
+
+        // .image-block__title
+        &__title {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: rem(2) rem(0);
+
+            color: #00ff00;
+            font-size: rem(12);
+            @include adaptiveValue('font-size', 12, 10, 991.98);
+            @include adaptiveValue('font-size', 12, 9, 0, 991.98);
+            font-weight: 700;
+            letter-spacing: rem(0.4);
+            text-align: center;
+            line-height: 1;
+
+            background-color: rgba(0, 0, 0, 0.6);
+            border-bottom-left-radius: rem(6);
+            border-bottom-right-radius: rem(6);
+
+            pointer-events: none;
+            z-index: $zIndex1;
+
+            // html._touch .image-block__title._done
+            html._touch &._done {
+                display: none;
+            }
+        }
+
+        // .image-block__move
+        &__move {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: rem(2) rem(0);
+
+            display: none;
+
+            font-size: rem(12);
+            @include adaptiveValue('font-size', 12, 10, 991.98);
+            @include adaptiveValue('font-size', 12, 9, 0, 991.98);
+            font-weight: 700;
+            letter-spacing: rem(0.4);
+            text-align: center;
+            line-height: 1;
+
+            background-color: rgba(0, 0, 0, 0.6);
+            border-bottom-left-radius: rem(6);
+            border-bottom-right-radius: rem(6);
+
+            z-index: $zIndex2;
+
+            // .image._has-file .image-block__move
+            html._touch .image._has-file & {
+                display: block;
+            }
+
+            // .image-block__move-current
+            &-current {
+                color: #00ff00;
+            }
+
+            // .image-block__move-target
+            &-target {
+                color: #ff0000;
+            }
+        }
+
+        // .image-block__close
+        &__close {
+            position: absolute;
+            top: rem(2);
+            right: rem(2);
+
+            padding: rem(4);
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background-color: #ff0000;
+            border-radius: 50%;
+
+            cursor: pointer;
+
+            opacity: 0;
+            visibility: hidden;
+            z-index: $zIndex1;
+
+            @extend %transition;
+
+            html._pc &:hover {
+                background-color: #c90000;
+            }
+
+            // .image-block__content._active .image-block__close
+            .image-block__content._active & {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            // .image-block__close svg
+            & svg {
+                width: rem(12);
+                @include adaptiveValue('width', 12, 10, 991.98);
+                @include adaptiveValue('width', 12, 10, 0, 991.98);
+
+                height: rem(12);
+                @include adaptiveValue('height', 12, 10, 991.98);
+                @include adaptiveValue('height', 12, 10, 0, 991.98);
+
+                transform: rotate(45deg);
+                pointer-events: none;
+
+                & * {
+                    fill: #fff;
+                }
+            }
+        }
+    }
+}
+
+/* =============================================  Image  --End--  ============================================= */
