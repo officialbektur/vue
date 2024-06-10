@@ -1,6 +1,4 @@
 <template>
-	<h4 class="text-white py-3 text-xl">DragAndDropVue2</h4>
-
 	<div
 		class="form__images image w-96 flex flex-wrap gap-2"
 		:class="{
@@ -76,28 +74,35 @@
 							/>
 						</svg>
 					</div>
-					<div class="image-block-placeholder__title">Добавьте фото</div>
+					<div class="image-block-placeholder__title">
+						Добавьте фото
+					</div>
 				</div>
-				<button
-					v-if="index !== 0 && !currentItem"
-					:disabled="isReadOnly"
-					type="button"
-					class="image-block__move image-block__move-current"
-					@click="startMoveImage(imageItem)"
-				>
-					Переместить
-				</button>
-				<button
-					v-if="currentItem && currentItem.index !== imageItem.index"
-					type="button"
-					class="image-block__move image-block__move-target"
-				>
-					Сюда
-				</button>
+				<div
+					v-if="isSelectedFile"
+					class="image-block__moves">
+					<button
+						v-if="index !== 0 && !currentItem"
+						:disabled="isReadOnly"
+						type="button"
+						class="image-block__banner image-block__banner-button image-block__move image-block__move-current"
+						@click="startMoveImage(imageItem)"
+					>
+						Переместить
+					</button>
+					<button
+						v-if="currentItem && currentItem.index !== imageItem.index"
+						:disabled="isReadOnly"
+						type="button"
+						class="image-block__banner image-block__banner-button image-block__move image-block__move-target"
+					>
+						Сюда
+					</button>
+				</div>
 			</div>
 			<div
 				v-if="index === 0"
-				class="image-block__title"
+				class="image-block__banner image-block__banner-button image-block__title"
 				:class="{
 					_done: currentItem,
 				}"
@@ -112,22 +117,20 @@
 	import { defineComponent } from 'vue';
 
 	interface ImageContract {
-		id: number;
-		key: number;
 		index: number;
 		src: string | null;
 		file: File | null;
 	}
 
 	export default defineComponent({
-		name: 'DragAndDropVue3',
+		name: 'DragAndDrop',
 		props: {
-			imagesCount: {
-				type: Number,
-				required: true,
-			},
 			isReadOnly: {
 				type: Boolean,
+				required: true,
+			},
+			imagesCount: {
+				type: Number,
 				required: true,
 			},
 		},
@@ -138,6 +141,7 @@
 				currentItem: null as ImageContract | null,
 				droppedIndex: null as number | null,
 				currentItemTouch: null as number | null,
+				preventWatchUpdate: false,
 			};
 		},
 		created() {
@@ -155,7 +159,6 @@
 						file: null,
 					})
 				);
-				this.dragCounter = Array(this.imagesCount).fill(0);
 			},
 			handleFileChange(event, index: number) {
 				const selectedFiles = event.target.files;
@@ -166,9 +169,12 @@
 				if (selectedFiles && selectedFiles.length > 0) {
 					const selectedFilesLength = Math.min(
 						selectedFiles.length,
-						this.imagesCount
+						this.imageItems.length,
 					);
-					const files = Array.from(selectedFiles).slice(0, selectedFilesLength);
+					const files = Array.from(selectedFiles).slice(
+						0,
+						selectedFilesLength,
+					);
 					if (files.length > 1) {
 						this.handleMultipleFiles(files, index);
 					} else {
@@ -186,10 +192,14 @@
 			handleFileInput(file: File, index: number) {
 				const images = Array.prototype.concat(
 					this.imageItems.slice(index),
-					this.imageItems.slice(0, index)
+					this.imageItems.slice(0, index),
 				);
 
-				const imageItem = images.find((res) => res.file === null);
+				const imageItem = images.find((res) => {
+					const isIDNull = !res.hasOwnProperty('id') || res.id === null;
+					const isFileNull = !res.hasOwnProperty('file') || res.file === null;
+					return isIDNull && isFileNull;
+				});
 
 				if (imageItem) {
 					return this.uploadFile(file, imageItem.index);
@@ -201,14 +211,16 @@
 				if (this.validateFile(file, index)) {
 					const input = this.$refs[`input_${index}`][0];
 
-					// Set files to input and ImageContract object
 					const newFile =
-						new ClipboardEvent('').clipboardData || new DataTransfer();
+						new ClipboardEvent('').clipboardData ||
+						new DataTransfer();
+
 					newFile.items.add(file);
+
 					input.files = newFile.files;
+					this.imageItems[index].id = null;
 					this.imageItems[index].file = newFile.files;
 
-					// Set src to ImageContract object
 					let reader = new FileReader();
 					reader.onload = (e) => {
 						this.imageItems[index].src = e.target.result;
@@ -217,9 +229,11 @@
 				}
 			},
 			validateFile(file: File, index: number, maxSizeMB = 5): boolean {
-				const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-				if (!allowedTypes.includes(file.type)) {
-					alert('Разрешены только изображения форматов: jpg, jpeg и png!');
+				const isAllowedTypes = ['image/jpeg', 'image/png', 'image/webp'].some((type) => type === file.type);
+				if (!isAllowedTypes) {
+					alert(
+						'Разрешены только изображения форматов: jpg, jpeg и png!',
+					);
 					this.removeImage(index);
 					return false;
 				}
@@ -228,8 +242,8 @@
 				if (isTooLarge) {
 					alert(
 						`Файл должен быть не более ${maxSizeMB} МБ, а ваш файл составляет: ` +
-							(file.size / 1024 / 1024).toFixed(2) +
-							' МБ'
+						(file.size / 1024 / 1024).toFixed(2) +
+						' МБ',
 					);
 					this.removeImage(index);
 					return false;
@@ -237,12 +251,14 @@
 				return true;
 			},
 			removeImage(index: number) {
+				this.imageItems[index].id = null;
 				this.imageItems[index].src = null;
 				this.imageItems[index].file = null;
 				this.$refs[`input_${index}`][0].value = null;
 			},
 			resetImage(index: number) {
 				this.removeImage(index);
+				this.resetMove();
 			},
 			handleDragStart(e: DragEvent, imageItem: ImageContract) {
 				this.currentItem = imageItem;
@@ -270,6 +286,7 @@
 				this.dragCounter[index] = 0;
 				this.currentItem = null;
 				this.droppedIndex = null;
+				this.resetMove();
 			},
 			handleDragEnd() {
 				this.droppedIndex = null;
@@ -278,7 +295,10 @@
 				this.moveImageContract(targetItem, currentItem);
 				this.updateInputs(currentItem.index, targetItem.index);
 			},
-			moveImageContract(targetItem: ImageContract, currentItem: ImageContract) {
+			moveImageContract(
+				targetItem: ImageContract,
+				currentItem: ImageContract,
+			) {
 				[targetItem.index, currentItem.index] = [
 					currentItem.index,
 					targetItem.index,
@@ -296,7 +316,10 @@
 				this.currentItemTouch = targetItem.index;
 			},
 			moveImageToAddress(event, currentItem: ImageContract) {
-				if (this.currentItem && this.currentItem.index !== currentItem.index) {
+				if (
+					this.currentItem &&
+					this.currentItem.index !== currentItem.index
+				) {
 					event.preventDefault();
 					this.moveImage(this.currentItem, currentItem);
 					this.resetMove();
@@ -319,7 +342,7 @@
 		},
 		computed: {
 			isSelectedFile() {
-				return this.imageItems.find((res) => res.src !== null);
+				return this.imageItems.some((res) => res.src !== null);
 			},
 		},
 	});

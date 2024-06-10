@@ -131,12 +131,14 @@ $containerWidth: $maxWidthContainer + $containerPadding;
 
         // .image__block._dropped
         &._dropped {
-            border: rem(2) dashed red;
+            box-shadow: rem(0) rem(0) rem(16) rem(8) #ff0000,
+            rem(0) rem(0) rem(18) rem(10) #ff0000;
         }
 
         // .image__block._current
-        &._current {
-            border: rem(2) dashed red;
+        html._touch &._current {
+            box-shadow: rem(0) rem(0) rem(16) rem(8) #ff0000,
+            rem(0) rem(0) rem(18) rem(10) #ff0000;
         }
 
         // .image__block._error
@@ -255,64 +257,48 @@ $containerWidth: $maxWidthContainer + $containerPadding;
                 line-height: 1;
             }
         }
+        // .image-block__moves
+        &__moves {
+            display: none;
 
-        // .image-block__title
-        &__title {
+            // .image._has-file .image-block__moves
+            html._touch .image._has-file & {
+                display: flex;
+            }
+        }
+
+        // .image-block__banner
+        &__banner {
             position: absolute;
             bottom: 0;
             width: 100%;
-            padding: rem(2) rem(0);
 
-            color: #00ff00;
-            font-size: rem(12);
-            @include adaptiveValue('font-size', 12, 10, 991.98);
-            @include adaptiveValue('font-size', 12, 9, 0, 991.98);
-            font-weight: 700;
-            letter-spacing: rem(0.4);
-            text-align: center;
-            line-height: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
             background-color: rgba(0, 0, 0, 0.6);
-            border-bottom-left-radius: rem(6);
-            border-bottom-right-radius: rem(6);
 
-            pointer-events: none;
-            z-index: $zIndex1;
+            // .image-block__banner-button
+            &-button {
+                width: 100%;
+                padding: rem(3) rem(2);
 
-            // html._touch .image-block__title._done
-            html._touch &._done {
-                display: none;
+                font-size: rem(12);
+                @include adaptiveValue('font-size', 12, 10, 991.98);
+                @include adaptiveValue('font-size', 12, 9, 0, 991.98);
+                font-weight: 700;
+                letter-spacing: rem(0.4);
+                text-align: center;
+                line-height: 1;
+
+                border-bottom-left-radius: rem(6);
+                border-bottom-right-radius: rem(6);
             }
         }
 
         // .image-block__move
         &__move {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            padding: rem(2) rem(0);
-
-            display: none;
-
-            font-size: rem(12);
-            @include adaptiveValue('font-size', 12, 10, 991.98);
-            @include adaptiveValue('font-size', 12, 9, 0, 991.98);
-            font-weight: 700;
-            letter-spacing: rem(0.4);
-            text-align: center;
-            line-height: 1;
-
-            background-color: rgba(0, 0, 0, 0.6);
-            border-bottom-left-radius: rem(6);
-            border-bottom-right-radius: rem(6);
-
-            z-index: $zIndex2;
-
-            // .image._has-file .image-block__move
-            html._touch .image._has-file & {
-                display: block;
-            }
-
             // .image-block__move-current
             &-current {
                 color: #00ff00;
@@ -373,6 +359,18 @@ $containerWidth: $maxWidthContainer + $containerPadding;
                 & * {
                     fill: #fff;
                 }
+            }
+        }
+
+        // .image-block__title
+        &__title {
+            color: #00ff00;
+
+            pointer-events: none;
+
+            // html._touch .image-block__title._done
+            html._touch &._done {
+                display: none;
             }
         }
     }
